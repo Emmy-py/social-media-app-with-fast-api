@@ -1,33 +1,20 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
+from typing import Optional, List
+
+from fastapi import  Response, status, HTTPException, Depends, APIRouter
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+from psycopg2.extras import RealDictCursor
 
 from app import oauth2
 from .. import models, schemas
-from ..database import engine, Base, get_db
-from ..utils import hash
+from ..database import get_db
+
 
 
 router = APIRouter(
     prefix="/posts",
     tags=["Posts"]
 )
-
-# only use when runing running raw queries with psycopg2, not needed when using sqlalchemy orm
-# while True:
-#     try: 
-#         conn = psycopg2.connect(host='localhost', database='fastapi', 
-#                                 user='postgres', password='INPUT PASS', cursor_factory=RealDictCursor)
-#         cursor = conn.cursor()
-        
-#         print("Database connection was successful")
-#         break
-
-#     except Exception as error:
-#         print("Connecting to database failed")
-#         print("Error: ", error)
-#         time.sleep(2)
-
-
 
 
 #remove comments when using raw queries with psycopg2, not needed when using sqlalchemy orm
@@ -55,18 +42,23 @@ router = APIRouter(
 #         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with the {id} was not found")
 #     return {"post" : post}
 
-@router.get("/{id}", response_model=schemas.PostResponse)
-async def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    post = db.query(models.Post).filter(models.Post.id == id).first()
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with the {id} was not found")
-    
-    if post.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
-    
-    
-    return post
+from sqlalchemy import func
 
+@router.get("/{id}", response_model=schemas.PostOut)
+async def get_post(id: int, db: Session = Depends(get_db)):
+    result = (
+        db.query(models.Post, func.count(models.Vote.post_id).label("votes"))
+        .join(models.Vote, models.Post.id == models.Vote.post_id, isouter=True)
+        .filter(models.Post.id == id)
+        .group_by(models.Post.id)
+        .first()
+    )
+
+    if not result:
+        raise HTTPException(status_code=404, detail=f"Post with id {id} was not found")
+
+    post, votes = result
+    return {"Post": post, "votes": votes}
 
 
 # get posts
@@ -77,14 +69,26 @@ async def get_post(id: int, db: Session = Depends(get_db), current_user: int = D
 #     posts = cursor.fetchall()
 #     return {"message" : posts}
 
-@router.get("/", response_model=list[schemas.PostResponse])
+@router.get("/", response_model=List[schemas.PostOut])
 async def get_posts(
     db: Session = Depends(get_db),
-    current_user: int = Depends(oauth2.get_current_user)  
+    current_user: int = Depends(oauth2.get_current_user),
+    Limit: int = 10,
+    skip: int = 0,
+    search: str = ""
 ):
-    posts = db.query(models.Post).all()
+    results = (
+        db.query(models.Post, func.count(models.Vote.post_id).label("votes"))
+        .join(models.Vote, models.Post.id == models.Vote.post_id, isouter=True)
+        .filter(models.Post.title.contains(search))
+        .group_by(models.Post.id)
+        .limit(Limit)
+        .offset(skip)
+        .all()
+    )
+    return [{"Post": post, "votes": votes} for post, votes in results]
 
-    return posts
+
 
 # create post
 
