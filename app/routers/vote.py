@@ -11,7 +11,7 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def vote(vote: schemas.vote, db: Session = Depends(get_db),
+async def vote(vote: schemas.Vote, db: Session = Depends(get_db),
                current_user: int = Depends(oauth2.get_current_user)):
 
     #  Check if the post exists first
