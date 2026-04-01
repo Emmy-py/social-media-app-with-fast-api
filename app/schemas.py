@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr, conint
+from enum import IntEnum   # ✅ correct import
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 
@@ -12,7 +13,7 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PostBase(BaseModel):
     title: str
@@ -29,14 +30,14 @@ class PostResponse(PostBase):
     owner: UserResponse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PostOut(BaseModel):
-    Post: PostResponse   
-    votes: int           
+    Post: PostResponse
+    votes: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -49,6 +50,10 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     id: Optional[int] = None
 
+class Direction(IntEnum):
+    down = 0
+    up = 1
+
 class Vote(BaseModel):
+    dir: Direction
     post_id: int
-    dir: conint(le=1)
