@@ -1,0 +1,25 @@
+services:
+  api:
+    image: emmanuelngene145/fastapi:v1
+    depends_on:
+      - db
+    ports:
+      - "80:8000"
+    volumes:
+      - ./:/usr/src/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 
+    env_file:
+      - .env  
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=${database_username}
+      - POSTGRES_PASSWORD=${database_password}
+      - POSTGRES_DB=${database_name}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
