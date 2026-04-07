@@ -13,34 +13,47 @@ jobs:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALGORITHM: ${{ secrets.ALGORITHM }}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
-    
+
     services:
       postgres:
-        image: postgres
+        image: postgres:13   # pin to a stable version
         env:
+          POSTGRES_USER: ${{ secrets.DATABASE_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           POSTGRES_DB: ${{ secrets.DATABASE_NAME }}_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="pg_isready -U ${{ secrets.DATABASE_USERNAME }}"
+          --health-interval=15s
+          --health-timeout=5s
+          --health-retries=10
 
     runs-on: ubuntu-latest
     steps:
-      - name: pulling git repo
+      - name: Checkout repo
         uses: actions/checkout@v2
-      - name: install python version 3.9
+
+      - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
-      - name: update pip
+
+      - name: Upgrade pip
         run: python -m pip install --upgrade pip
-      - name: install dependencies
+
+      - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: test with pytest
-        run: 
-          pip install pytest
-          pytest 
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run tests
+        run: pytest
+
+      # Extra step to show Postgres logs if service fails
+      - name: Show Postgres logs
+        if: failure()
+        run: |
+          echo "=== Postgres container logs ==="
+          docker logs $(docker ps -aq --filter "ancestor=postgres:13")
