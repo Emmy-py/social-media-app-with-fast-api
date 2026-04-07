@@ -11,9 +11,13 @@ from app.oauth2 import create_access_token
 from app import models
 
 # Use PostgreSQL test database
+_db_name = settings.database_name
+if not _db_name.endswith("_test"):
+    _db_name = f"{_db_name}_test"
+
 SQLALCHEMY_DATABASE_URL = (
     f"postgresql://{settings.database_username}:{settings.database_password}"
-    f"@{settings.database_hostname}:{settings.database_port}/{settings.database_name}_test"
+    f"@{settings.database_hostname}:{settings.database_port}/{_db_name}"
 )
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
