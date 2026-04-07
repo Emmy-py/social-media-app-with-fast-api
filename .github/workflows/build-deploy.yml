@@ -24,11 +24,13 @@ jobs:
           POSTGRES_DB: ${{ format('{0}_test', secrets.DATABASE_NAME) }}
         ports:
           - 5432:5432
+    
         options: >-
-          --health-cmd="pg_isready -U ${{ secrets.DATABASE_USERNAME }}"
-          --health-interval=15s
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
           --health-timeout=5s
-          --health-retries=10
+          --health-start-period=10s
+          --health-retries=5
 
     runs-on: ubuntu-latest
     steps:
