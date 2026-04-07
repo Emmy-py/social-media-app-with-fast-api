@@ -45,3 +45,9 @@ jobs:
         run: 
           pip install pytest
           pytest 
+      - name: Show Postgres logs
+        if: failure()
+        run: |
+          echo "=== Postgres container logs ==="
+          docker ps -a
+          docker logs $(docker ps -aq --filter "ancestor=postgres:13")
