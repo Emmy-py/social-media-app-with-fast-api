@@ -24,6 +24,7 @@ This FastAPI application provides a complete backend for a social media platform
 - **Voting System** - Users can upvote/downvote posts
 - **Database Migrations** - Alembic for schema versioning
 - **Comprehensive Testing** - Pytest test suite with fixtures for isolated database testing
+- **Automated Deployment** -  GitHub Actions CI/CD pipeline for testing and deploying to AWS EC2
 
 ## Tech Stack
 
@@ -37,6 +38,8 @@ This FastAPI application provides a complete backend for a social media platform
 | **Authentication** | JWT | python-jose 3.3.0 |
 | **Password Hashing** | Bcrypt | 4.1.2 |
 | **Testing** | Pytest | Latest |
+| **CI/CD** | GitHub Actions | Latest |
+| **Deployment** | Docker + AWS EC2 | Latest |
 
 ## Setup Instructions
 
