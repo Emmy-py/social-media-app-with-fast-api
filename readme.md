@@ -1,4 +1,4 @@
-# FastAPI Post & Vote Application
+# SOCIAL MEDIA API WITH FastAPI
 
 A modern REST API built with **FastAPI** for managing users, posts, and voting. Features JWT authentication, PostgreSQL database integration, and comprehensive test coverage.
 
