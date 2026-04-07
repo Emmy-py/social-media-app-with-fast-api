@@ -1,8 +1,9 @@
 from app import schemas
-from .database import client, session
+from .conftest import client, session
 import pytest
 from jose import jwt
 from app.config import settings
+from .conftest import test_user
 
 
 
@@ -24,21 +25,13 @@ from app.config import settings
 #     assert "access_token" in res.json()
 #     assert res.json()["token_type"] == "bearer"
 
-@pytest.fixture
-def test_user(client):
-    user_data = {"email": "test@example.com", "password": "password123"}
-    res = client.post("/users/", json=user_data)
-    assert res.status_code == 201
+
+
+def test_create_user(client):
+    res = client.post("/users/", json={"email":"test5@example.com", "password": "password123"})
     new_user = schemas.UserResponse(**res.json())
-    
-    # Return both the response object and the raw data
-    return {
-    "id": new_user.id,
-    "email": new_user.email,
-    "password": user_data["password"]
-}
-
-
+    assert res.status_code == 201
+    assert new_user.email == "test5@example.com"
 
 def test_login_user(test_user, client):
     res = client.post(
@@ -55,4 +48,3 @@ def test_login_user(test_user, client):
     data = res.json()
     assert "access_token" in data
     assert login_res.token_type == "bearer"
-
